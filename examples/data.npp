@@ -1,0 +1,143 @@
+array("data", "69", "83", "48", "79", "25");
+
+def sort(arrayName) {
+    int n = lenArray(arrayName);
+    for (int i = 0; i < n; i = i + 1) {
+        for (int j = 0; j < n - i - 1; j = j + 1) {
+            int current = integize(getArray(arrayName, j));
+            int next = integize(getArray(arrayName, j + 1));
+            if (current > next) {
+                cngArray(arrayName, j, stringize(next));
+                cngArray(arrayName, j + 1, stringize(current));
+            }
+        }
+    }
+}
+
+// Do with class
+def average(arrayName) {
+    int allAdded = 0;
+    for (int i = 0; i < lenArray(arrayName); i = i + 1) {
+        int current = integize(getArray(arrayName, i));
+        allAdded = allAdded + current;
+    }
+
+    int result = allAdded / lenArray(arrayName);
+    return "Average: " + stringize(result);
+}
+
+// Do with class
+def range(arrayName) {
+    int first = integize(getArray(arrayName, 0));
+    int second = integize(getArray(arrayName, lenArray(arrayName)-1));
+    return "Range: " + stringize(second - first);
+}
+
+def median(arrayName) {
+    int n = lenArray(arrayName);
+    int middleIndex = n / 2;
+
+    if (mdls(n, 2) or mdls(n-0.5, 2)) {
+        int medianValue = integize(getArray(arrayName, middleIndex));
+        return "Median: " + stringize(medianValue);
+    } else {
+        int middle1 = integize(getArray(arrayName, middleIndex - 1));
+        int middle2 = integize(getArray(arrayName, middleIndex));
+        int medianValue = (middle1 + middle2) / 2;
+        return "Median: " + stringize(medianValue);
+    }
+}
+
+// Do with class
+def min(arrayName) {
+    return "Minimum: " + getArray(arrayName, 0);
+}
+
+// Do with class
+def max(arrayName) {
+    return "Maximum: " + getArray(arrayName, lenArray(arrayName)-1);
+}
+
+// Partial do with class
+def standardDeviation(arrayName, distanceArrayName) {
+    array("distances");
+
+    int n = lenArray(arrayName);
+    
+    for (int i = 0; i < n - 1; i = i + 1) {
+        int current = integize(getArray(arrayName, i));
+        int next = integize(getArray(arrayName, i + 1));
+        int distance = abs(current - next);
+        
+        addArray(distanceArrayName, stringize(distance));
+    }
+
+    broadcastXN("Distance Array: ");
+    bctArray(distanceArrayName);
+
+    int allAdded = 0;
+    for (int i = 0; i < lenArray(distanceArrayName); i = i + 1) {
+        int current = integize(getArray(distanceArrayName, i));
+        allAdded = allAdded + current;
+    }
+
+    int result = allAdded / lenArray(distanceArrayName);
+    return "Standard Deviation: " + stringize(result);
+}
+
+def mode(arrayName) {
+    array("uniqueNumbers");
+    array("frequencies");
+
+    for (int i = 0; i < lenArray(arrayName); i = i + 1) {
+        int current = integize(getArray(arrayName, i));
+        int found = 0;
+
+        for (int j = 0; j < lenArray("uniqueNumbers"); j = j + 1) {
+            int uniqueNumber = integize(getArray("uniqueNumbers", j));
+
+            if (uniqueNumber == current) {
+                // Increment the corresponding frequency
+                int freqCount = integize(getArray("frequencies", j));
+                cngArray("frequencies", j, stringize(freqCount + 1));
+                found = 1;
+            }
+        }
+
+        if (found == 0) {
+            addArray("uniqueNumbers", stringize(current));
+            addArray("frequencies", "1");
+        }
+    }
+
+    array("modes");
+
+    for (int i = 0; i < lenArray("frequencies"); i = i + 1) {
+        int freqCount = integize(getArray("frequencies", i));
+
+        if (freqCount >= 2) {
+            addArray("modes", getArray("uniqueNumbers", i));
+        }
+    }
+
+    broadcastXN("Mode: ");
+    bctArray("modes");
+}
+
+broadcastXN("Unsorted Array: ");
+bctArray("data");
+
+sort("data");
+
+broadcastXN("Sorted Array: ");
+bctArray("data");
+
+broadcast(standardDeviation("data", "distances"));
+broadcast(average("data"));
+broadcast(median("data"));
+broadcast(range("data"));
+broadcast(min("data"));
+broadcast(max("data"));
+mode("data");
+
+wait(10);

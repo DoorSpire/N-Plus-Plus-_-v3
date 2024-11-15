@@ -1,0 +1,22 @@
+int str = "Hello, world!";
+int nStr = "";
+array("Array");
+
+def toArray(str, arrName) {
+    int len = strLen(str);
+    for (int i = 0; i < len; i = i + 1) {
+        addArray(arrName, strIndex(str, i));
+    }
+}
+
+def toString(arrName) {
+    int len = lenArray(arrName);
+    for (int i = 0; i < len; i = i + 1) {
+        nStr = nStr + getArray(arrName, i);
+    }
+}
+
+toArray(str, "Array");
+bctArray("Array");
+toString("Array");
+broadcast(nStr);

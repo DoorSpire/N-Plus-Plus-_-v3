@@ -1,0 +1,14 @@
+def mainloop() {
+    while (true) {
+        int input = receive(">>>> ");
+        if (input == "quit") {
+            quit();
+        } else if (input == "time") {
+            broadcast(time("M-D-Y H:m:S"));
+        } else {
+            broadcast(input);
+        }
+    }
+}
+
+mainloop();
