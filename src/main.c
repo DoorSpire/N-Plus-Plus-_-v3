@@ -46,7 +46,7 @@ int main(int argc, const char* argv[]) {
     const char* suffix = ".npp";
 
     if (argc == 2 && strcmp(argv[1], "help") == 0) {
-        printf("Usage: nppc2 [main_file] // [args...]\n");
+        printf("Usage: nppc3 [main_file] // [args...]\n");
         exit(0);
     } else if (argc == 1) {
         repl();
