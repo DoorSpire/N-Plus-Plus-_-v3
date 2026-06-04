@@ -14,11 +14,8 @@
 #include "memory.h"
 #include "vm.h"
 
-#define MAX_ARRAYS 1000
-
 const char** globalArgs;
 int globalArgsCount;
-
 Array globalArrays[MAX_ARRAYS];
 int globalArrayCount = 0;
 
@@ -724,9 +721,6 @@ Array* getArrayByName(const char* name) {
 void removeArrayFromGlobalList(const char* name) {
     for (int i = 0; i < globalArrayCount; i++) {
         if (strcmp(globalArrays[i].name, name) == 0) {
-            for (int j = 0; j < globalArrays[i].capacity; j++) {
-                free(globalArrays[i].contents[j]);
-            }
             free(globalArrays[i].contents);
             free(globalArrays[i].name);
 
@@ -745,19 +739,23 @@ static Value arrayNative(int argCount, Value* args) {
         runtimeError("Expected at least 1 argument but got %d.", argCount);
     }
 
-    for (int i = 0; i < argCount; i++) {
-        if (!IS_STRING(args[i])) {
-            runtimeError("Arguments must be strings");
-        }
+    if (!IS_STRING(args[0])) {
+        runtimeError("Array name must be a string.");
     }
 
     Array newArray;
     newArray.capacity = argCount - 1;
-    newArray.contents = malloc(newArray.capacity * sizeof(char*));
     newArray.name = strdup(AS_CSTRING(args[0]));
+    Value* temp = realloc(newArray.contents, newArray.capacity * sizeof(Value));
+
+    if (temp == NULL) {
+        runtimeError("Failed to allocate memory.");
+    }
+
+    newArray.contents = temp;
 
     for (int i = 1; i < argCount; i++) {
-        newArray.contents[i - 1] = strdup(AS_CSTRING(args[i]));
+        newArray.contents[i - 1] = args[i];
     }
 
     addArray(newArray);
@@ -766,6 +764,12 @@ static Value arrayNative(int argCount, Value* args) {
 }
 
 void clsArray() {
+    for (int i = 0; i < globalArrayCount; i++) {
+        free(globalArrays[i].contents);
+        free(globalArrays[i].name);
+    }
+
+    globalArrayCount = 0;
     memset(globalArrays, 0, sizeof(globalArrays));
 }
 
@@ -793,7 +797,7 @@ static Value getArrayNative(int argCount, Value* args) {
         runtimeError("Index %d out of bounds for array '%s' (size: %d).", index, array->name, array->capacity);
     }
 
-    return OBJ_VAL(copyString(array->contents[index], (int)strlen(array->contents[index])));
+    return array->contents[index];
 }
 
 static Value lenArrayNative(int argCount, Value* args) {
@@ -819,11 +823,7 @@ static Value addArrayNative(int argCount, Value* args) {
     }
 
     if (!IS_STRING(args[0])) {
-        runtimeError("Arguments must be a number.");
-    }
-
-    if (!IS_STRING(args[1])) {
-        runtimeError("Arguments must be a number.");
+        runtimeError("Argument 1 must be a string.");
     }
 
     Array* array = getArrayByName(AS_CSTRING(args[0]));
@@ -832,13 +832,13 @@ static Value addArrayNative(int argCount, Value* args) {
     }
 
     int newCapacity = array->capacity + 1;  // Increment capacity by 1
-    array->contents = realloc(array->contents, newCapacity * sizeof(char*));
+    array->contents = realloc(array->contents, newCapacity * sizeof(Value));
 
     if (array->contents == NULL) {
         runtimeError("Failed to allocate memory for array expansion.");
     }
 
-    array->contents[array->capacity] = strdup(AS_CSTRING(args[1]));
+    array->contents[array->capacity] = args[1];
     array->capacity++;
 
     return NULL_VAL;
@@ -868,14 +868,18 @@ static Value rmvArrayNative(int argCount, Value* args) {
         runtimeError("Index %d out of bounds for array '%s' (size: %d).", index, array->name, array->capacity);
     }
 
-    free(array->contents[index]);
-
     for (int i = index; i < array->capacity - 1; i++) {
         array->contents[i] = array->contents[i + 1];
     }
 
     int newCapacity = array->capacity - 1;
-    array->contents = realloc(array->contents, newCapacity * sizeof(char*));
+    Value* temp = realloc(array->contents, newCapacity * sizeof(Value));
+
+    if (temp == NULL) {
+        runtimeError("Failed to allocate memory.");
+    }
+
+    array->contents = temp;
     
     if (array->contents == NULL && newCapacity > 0) {
         runtimeError("Failed to allocate memory while shrinking the array.");
@@ -895,10 +899,6 @@ static Value cngArrayNative(int argCount, Value* args) {
         runtimeError("Argument 1 must be a string.");
     }
 
-    if (!IS_STRING(args[2])) {
-        runtimeError("Argument 3 must be a string.");
-    }
-
     if (!IS_NUMBER(args[1])) {
         runtimeError("Argument 2 must be a number.");
     }
@@ -914,9 +914,7 @@ static Value cngArrayNative(int argCount, Value* args) {
         runtimeError("Index %d out of bounds for array '%s' (size: %d).", index, array->name, array->capacity);
     }
 
-    array->contents[index] = AS_CSTRING(args[2]);
-    array->contents = realloc(array->contents, array->capacity * sizeof(char*));
-    array->capacity = array->capacity;
+    array->contents[index] = args[2];
 
     return NULL_VAL;
 }
@@ -937,12 +935,6 @@ static Value delArrayNative(int argCount, Value* args) {
         runtimeError("Array with name '%s' not found.", arrayName);
     }
 
-    for (int i = 0; i < array->capacity; i++) {
-        free(array->contents[i]);
-    }
-
-    free(array->contents);
-    free(array->name);
     removeArrayFromGlobalList(arrayName);
 
     return NULL_VAL;
@@ -966,10 +958,9 @@ static Value bctArrayNative(int argCount, Value* args) {
 
     printf("[");
     for (int i = 0; i < array->capacity; i++) {
-        if (i == array->capacity - 1) {
-            printf("%s", array->contents[i]);
-        } else {
-            printf("%s, ", array->contents[i]);
+        printValue(array->contents[i]);
+        if (i < array->capacity - 1) {
+            printf(", ");
         }
     }
     printf("]\n");
