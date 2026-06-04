@@ -1,9 +1,14 @@
 #include <stdlib.h>
+
 #include "compiler.h"
 #include "memory.h"
 #include "vm.h"
+#include "native.h"
 
 #define GC_HEAP_GROW_FACTOR 2
+
+extern Array globalArrays[MAX_ARRAYS];
+extern int globalArrayCount;
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     size_t sizeDifference = newSize - oldSize;
@@ -136,6 +141,16 @@ static void freeObject(Obj* object) {
     }
 }
 
+void markArrays() {
+    for (int i = 0; i < globalArrayCount; i++) {
+        Array* array = &globalArrays[i];
+
+        for (int j = 0; j < array->capacity; j++) {
+            markValue(array->contents[j]);
+        }
+    }
+}
+
 static void markRoots() {
     for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
         markValue(*slot);
@@ -150,6 +165,7 @@ static void markRoots() {
     }
 
     markTable(&vm.globals);
+    markArrays();
     markCompilerRoots();
     markObject((Obj*)vm.initString);
 }
