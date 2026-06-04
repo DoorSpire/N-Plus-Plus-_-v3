@@ -3,8 +3,10 @@
 
 #include "value.h"
 
+#define MAX_ARRAYS 1000
+
 typedef struct {
-    char** contents;
+    Value* contents;
     int capacity;
     char* name;
 } Array;
