@@ -596,7 +596,7 @@ static Value mdlsNative(int argCount, Value* args) {
 
     int a = AS_NUMBER(args[0]);
     int b = AS_NUMBER(args[1]);
-    return BOOL_VAL(a % b == 0);
+    return NUMBER_VAL(a % b == 0);
 }
 
 static Value randNative(int argCount, Value* args) {
