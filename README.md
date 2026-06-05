@@ -220,6 +220,7 @@ hypot(1, 2);
 sqrt(1); // Square root
 powr(5, 2); // Power operator
 mdls(10, 5); // Modulus operator
+rand(0, 10); // Random function (min, max)
 
 collectGarbage(); // Collects garbage
 runtimeError("Whoopsy daisy!"); // Does a runtime error
